@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Avis;
 use App\Repository\AvisRepository;
+use DateTimeImmutable;
 use OpenApi\Attributes as OA;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -63,7 +64,7 @@ class AvisController extends AbstractController
     public function new(Request $request): JsonResponse
     {
         $avis = $this->serializer->deserialize($request->getContent(), Avis::class, 'json');
-        $avis->setCreatedAt(new \DateTimeImmutable());
+
 
         $this->manager->persist($avis);
         $this->manager->flush();

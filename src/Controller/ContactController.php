@@ -64,7 +64,6 @@ class ContactController extends AbstractController
     public function new(Request $request): JsonResponse
     {
         $contact = $this->serializer->deserialize($request->getContent(), Contact::class, 'json');
-        $contact->setCreatedAt(new \DateTimeImmutable());
 
         $this->manager->persist($contact);
         $this->manager->flush();
