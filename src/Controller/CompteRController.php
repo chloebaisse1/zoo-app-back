@@ -72,7 +72,6 @@ class CompteRController extends AbstractController
     public function new(Request $request): JsonResponse
     {
         $compteR = $this->serializer->deserialize($request->getContent(), CompteR::class, 'json');
-        $compteR->setCreatedAt(new \DateTimeImmutable());
 
         $this->manager->persist($compteR);
         $this->manager->flush();
@@ -194,7 +193,6 @@ class CompteRController extends AbstractController
                 'json',
                 [AbstractNormalizer::OBJECT_TO_POPULATE => $compteR]
             );
-            $compteR->setUpdatedAt(new \DateTimeImmutable());
 
             $this->manager->flush();
 

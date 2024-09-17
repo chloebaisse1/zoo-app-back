@@ -58,6 +58,7 @@ class ContactController extends AbstractController
                         new OA\Property(property: "createdAt", type: "string", format: "date-time"),
                     ]
                 )
+
             )
         ]
     )]
