@@ -41,8 +41,9 @@ class SecurityController extends AbstractController
                 new OA\Property(property: "firstName", type: "string", example: "Doe"),
                 new OA\Property(property: "lastName", type: "string", example: "John"),
                 new OA\Property(property: "email", type: "string", example: "adresse@email.com"),
-                new OA\Property(property: "password", type: "string", example: "mot de passe")
-            ]
+                new OA\Property(property: "password", type: "string", example: "mot de passe"),
+                new OA\Property(property: "role", type: "string", example: "ROLE_USER")
+                ]
         )
     ),
     responses: [
@@ -67,8 +68,20 @@ class SecurityController extends AbstractController
 
     public function register(Request $request, UserPasswordHasherInterface $passwordHasher): JsonResponse
     {
+
+        $data = json_decode($request->getContent(), true);
+
+        // liste des roles autorisés
+        $allowedRoles = ['ROLE_USER', 'ROLE_ADMIN', 'ROLE_VETERINAIRE', 'ROLE_EMPLOYEE'];
+        $role = $data['role'] ?? 'ROLE_USER';
+
+        if(!in_array($role, $allowedRoles)){
+            return new JsonResponse(['message' => 'Role non autorisé'], Response::HTTP_BAD_REQUEST);
+        }
+
         $user = $this->serializer->deserialize($request->getContent(), User::class, 'json');
         $user->setPassword($passwordHasher->hashPassword($user, $user->getPassword()));
+        $user->setRoles([$role]);
         $user->setCreatedAt(new \DateTimeImmutable());
 
         $this->manager->persist($user);
