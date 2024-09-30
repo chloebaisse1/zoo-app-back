@@ -58,7 +58,7 @@ class AnimalController extends AbstractController
                         new OA\Property(property: "race", type: "string", example: "Race de l'animal"),
                         new OA\Property(property: "habitat", type: "string", example: "habitat de l'animal"),
                         new OA\Property(property: "etat", type: "string", example: "etat de santé de l'animal"),
-                        new OA\Property(property: "createdAt", type: "string", format: "date-time"),
+                        new OA\Property(property: "createdAt", type: "string", format: "date-time")
                     ]
                 )
             )
@@ -68,7 +68,7 @@ class AnimalController extends AbstractController
     public function new(Request $request): JsonResponse
     {
         $animal = $this->serializer->deserialize($request->getContent(), Animal::class, 'json');
-        $animal->setCreatedAt(new \DateTimeImmutable());
+
 
         $this->manager->persist($animal);
         $this->manager->flush();

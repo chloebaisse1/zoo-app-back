@@ -19,16 +19,19 @@ use Symfony\Component\Serializer\SerializerInterface;
 class ServiceController extends AbstractController
 {
     public function __construct(
-    private EntityManagerInterface $manager,
-    private ServiceRepository $repository,
-    private SerializerInterface $serializer,
-    private UrlGeneratorInterface $urlGenerator,
-        )
-    {
+        private EntityManagerInterface $manager,
+        private ServiceRepository $repository,
+        private SerializerInterface $serializer,
+        private UrlGeneratorInterface $urlGenerator,
+    ) {}
+
+    #[Route('', name: 'list_services', methods: ['GET'])]
+    public function listServices(): JsonResponse {
+        $services = $this->repository->findAll();
+        return $this->json($services); // Renvoie les services sous format JSON
     }
 
-
-    #[Route(name: 'new', methods: 'POST')]
+    #[Route('', name: 'new', methods: ['POST'])]
     #[OA\Post(
         path: "/api/service",
         summary: "Creation d'un service",
@@ -38,7 +41,7 @@ class ServiceController extends AbstractController
             content: new OA\JsonContent(
                 type: "object",
                 properties: [
-                    new OA\Property(property: "nom", type: "string", example: "nom du service"),
+                    new OA\Property(property: "name", type: "string", example: "nom du service"),
                     new OA\Property(property: "description", type: "string", example: "description du service"),
                 ]
             )
@@ -51,7 +54,7 @@ class ServiceController extends AbstractController
                     type: "object",
                     properties: [
                         new OA\Property(property: "id", type: "integer", example: 1),
-                        new OA\Property(property: "nom", type: "string", example: "Nom du service"),
+                        new OA\Property(property: "name", type: "string", example: "Nom du service"),
                         new OA\Property(property: "description", type: "string", example: "Description du service"),
                         new OA\Property(property: "createdAt", type: "string", format: "date-time"),
                     ]
@@ -69,16 +72,14 @@ class ServiceController extends AbstractController
 
         $responseData = $this->serializer->serialize($service, 'json');
         $location = $this->urlGenerator->generate(
-        'app_api_service_show',
-        ['id' => $service->getId()],
-        UrlGeneratorInterface::ABSOLUTE_URL
+            'app_api_service_show',
+            ['id' => $service->getId()],
+            UrlGeneratorInterface::ABSOLUTE_URL
         );
-        return new JsonResponse($responseData, Response::HTTP_CREATED, ["Location"=> $location], true);
-
+        return new JsonResponse($responseData, Response::HTTP_CREATED, ["Location" => $location], true);
     }
 
-
-    #[Route('/{id}', name: 'show', methods: 'GET')]
+    #[Route('/{id}', name: 'show', methods: ['GET'])]
     #[OA\Get(
         path: "/api/service/{id}",
         summary: "Afficher un service par son ID",
@@ -99,7 +100,7 @@ class ServiceController extends AbstractController
                     type: "object",
                     properties: [
                         new OA\Property(property: "id", type: "integer", example: 1),
-                        new OA\Property(property: "nom", type: "string", example: "Nom du service"),
+                        new OA\Property(property: "name", type: "string", example: "Nom du service"),
                         new OA\Property(property: "description", type: "string", example: "Description du service"),
                         new OA\Property(property: "createdAt", type: "string", format: "date-time")
                     ]
@@ -111,21 +112,18 @@ class ServiceController extends AbstractController
             )
         ]
     )]
-
     public function show(int $id): JsonResponse
     {
         $service = $this->repository->findOneBy(['id' => $id]);
-        if($service){
-        $responseData = $this->serializer->serialize($service, 'json');
-
-        return new JsonResponse($responseData, Response::HTTP_OK, [], true);
+        if ($service) {
+            $responseData = $this->serializer->serialize($service, 'json');
+            return new JsonResponse($responseData, Response::HTTP_OK, [], true);
         }
 
         return new JsonResponse(null, Response::HTTP_NOT_FOUND);
-}
+    }
 
-
-    #[Route('/{id}', name: 'edit', methods: 'PUT')]
+    #[Route('/{id}', name: 'edit', methods: ['PUT'])]
     #[OA\Put(
         path: "/api/service/{id}",
         summary: "Modifier un service par ID",
@@ -144,7 +142,7 @@ class ServiceController extends AbstractController
             content: new OA\JsonContent(
                 type: "object",
                 properties: [
-                    new OA\Property(property: "nom", type: "string", example: "Nouveau nom du service"),
+                    new OA\Property(property: "name", type: "string", example: "Nouveau nom du service"),
                     new OA\Property(property: "description", type: "string", example: "Nouvelle description du service"),
                 ]
             )
@@ -160,11 +158,10 @@ class ServiceController extends AbstractController
             )
         ]
     )]
-
     public function edit(int $id, Request $request): JsonResponse
     {
         $service = $this->repository->findOneBy(['id' => $id]);
-        if($service){
+        if ($service) {
             $service = $this->serializer->deserialize(
                 $request->getContent(),
                 Service::class,
@@ -177,13 +174,10 @@ class ServiceController extends AbstractController
 
             return new JsonResponse(null, Response::HTTP_NO_CONTENT);
         }
-            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 
-
-
-
-    #[Route('/{id}', name: 'delete', methods: 'DELETE')]
+    #[Route('/{id}', name: 'delete', methods: ['DELETE'])]
     #[OA\Delete(
         path: "/api/service/{id}",
         summary: "Supprimer un service par son ID",
@@ -210,13 +204,12 @@ class ServiceController extends AbstractController
     public function delete(int $id): JsonResponse
     {
         $service = $this->repository->findOneBy(['id' => $id]);
-        if($service){
+        if ($service) {
+            $this->manager->remove($service);
+            $this->manager->flush();
 
-        $this->manager->remove($service);
-        $this->manager->flush();
-
-        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+        }
+        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
-    return new JsonResponse(null, Response::HTTP_NOT_FOUND);
-}
 }

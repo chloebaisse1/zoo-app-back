@@ -23,12 +23,10 @@ class PassageController extends AbstractController
         private PassageRepository $repository,
         private SerializerInterface $serializer,
         private UrlGeneratorInterface $urlGenerator,
-        )
-    {
+    ) {
     }
 
-
-    #[Route(name: 'new', methods: 'POST')]
+    #[Route(name: 'new', methods: ['POST', 'OPTIONS'])]
     #[OA\Post(
         path: "/api/passage",
         summary: "Creation d'un passage employé(e)",
@@ -72,23 +70,22 @@ class PassageController extends AbstractController
     public function new(Request $request): JsonResponse
     {
         $passage = $this->serializer->deserialize($request->getContent(), Passage::class, 'json');
-        $passage->setCreatedAt(new \DateTimeImmutable());
+
 
         $this->manager->persist($passage);
         $this->manager->flush();
 
         $responseData = $this->serializer->serialize($passage, 'json');
         $location = $this->urlGenerator->generate(
-        'app_api_passage_show',
-        ['id' => $passage->getId()],
-        UrlGeneratorInterface::ABSOLUTE_URL
+            'app_api_passage_show',
+            ['id' => $passage->getId()],
+            UrlGeneratorInterface::ABSOLUTE_URL
         );
 
         return new JsonResponse($responseData, Response::HTTP_CREATED, ["Location"=> $location], true);
     }
 
-
-    #[Route('/{id}', name: 'show', methods: 'GET')]
+    #[Route('/{id}', name: 'show', methods: ['GET', 'OPTIONS'])]
     #[OA\Get(
         path: "/api/passage/{id}",
         summary: "Afficher un passage par son ID",
@@ -129,16 +126,16 @@ class PassageController extends AbstractController
     public function show(int $id): JsonResponse
     {
         $passage = $this->repository->findOneBy(['id' => $id]);
-        if($passage){
+        if ($passage) {
             $responseData = $this->serializer->serialize($passage, 'json');
 
-        return new JsonResponse($responseData, Response::HTTP_OK, [], true);
+            return new JsonResponse($responseData, Response::HTTP_OK, [], true);
         }
 
         return new JsonResponse(null, Response::HTTP_NOT_FOUND);
-}
+    }
 
-    #[Route('/{id}', name: 'edit', methods: 'PUT')]
+    #[Route('/{id}', name: 'edit', methods: ['PUT', 'OPTIONS'])]
     #[OA\Put(
         path: "/api/passage/{id}",
         summary: "Modifier un passage par ID",
@@ -157,14 +154,13 @@ class PassageController extends AbstractController
             content: new OA\JsonContent(
                 type: "object",
                 properties: [
-                    new OA\Property(property: "id", type: "integer", example: 1),
-                        new OA\Property(property: "nom", type: "string", example: "Nom de l'animal"),
-                        new OA\Property(property: "race", type: "string", example: "race de l'animal"),
-                        new OA\Property(property: "habitat", type: "string", example: "habitat de l'animal"),
-                        new OA\Property(property: "nourriture", type: "string", example: "nourriture donnée"),
-                        new OA\Property(property: "quantitee", type: "string", example: "quantitée donnée"),
-                        new OA\Property(property: "date", type: "string", format: "date-time", example: "date du passage"),
-                        new OA\Property(property: "heure", type: "string", format: "time", example: "heure du passage"),
+                    new OA\Property(property: "nom", type: "string", example: "Nom de l'animal"),
+                    new OA\Property(property: "race", type: "string", example: "race de l'animal"),
+                    new OA\Property(property: "habitat", type: "string", example: "habitat de l'animal"),
+                    new OA\Property(property: "nourriture", type: "string", example: "nourriture donnée"),
+                    new OA\Property(property: "quantitee", type: "string", example: "quantitée donnée"),
+                    new OA\Property(property: "date", type: "string", format: "date-time", example: "date du passage"),
+                    new OA\Property(property: "heure", type: "string", format: "time", example: "heure du passage"),
                 ]
             )
         ),
@@ -182,29 +178,20 @@ class PassageController extends AbstractController
     public function edit(int $id, Request $request): Response
     {
         $passage = $this->repository->findOneBy(['id' => $id]);
-        if($passage){
-            $passage = $this->serializer->deserialize(
-                $request->getContent(),
-                Passage::class,
-                'json',
-                [AbstractNormalizer::OBJECT_TO_POPULATE => $passage]
-            );
-            $passage->setUpdatedAt(new \DateTimeImmutable());
-
-            $this->manager->flush();
-
-            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
-        }
+        if (!$passage) {
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        }
+
+        $this->serializer->deserialize($request->getContent(), Passage::class, 'json', [AbstractNormalizer::OBJECT_TO_POPULATE => $passage]);
+        $this->manager->flush();
+
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
-
-
-
-    #[Route('/{id}', name: 'delete', methods: 'DELETE')]
+    #[Route('/{id}', name: 'delete', methods: ['DELETE', 'OPTIONS'])]
     #[OA\Delete(
         path: "/api/passage/{id}",
-        summary: "Supprimer un passage par son ID",
+        summary: "Supprimer un passage par ID",
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -217,7 +204,7 @@ class PassageController extends AbstractController
         responses: [
             new OA\Response(
                 response: 204,
-                description: "Passage supprimé avec succès",
+                description: "Passage supprimé avec succès"
             ),
             new OA\Response(
                 response: 404,
@@ -225,15 +212,16 @@ class PassageController extends AbstractController
             )
         ]
     )]
-    public function delete(int $id): JsonResponse
+    public function delete(int $id): Response
     {
         $passage = $this->repository->findOneBy(['id' => $id]);
-        if($passage){
+        if (!$passage) {
+            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        }
+
         $this->manager->remove($passage);
         $this->manager->flush();
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
-        }
-        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 }

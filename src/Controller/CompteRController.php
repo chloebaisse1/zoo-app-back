@@ -26,6 +26,15 @@ class CompteRController extends AbstractController
     {
     }
 
+    #[Route(name: 'options', methods: 'OPTIONS')]
+    public function options(): JsonResponse
+    {
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT, [
+            'Access-Control-Allow-Origin' => 'http://127.0.0.1:3307',
+            'Access-Control-Allow-Headers' => 'Content-Type, Authorization',
+            'Access-Control-Allow-Methods' => 'GET, POST, OPTIONS, PUT, DELETE',
+        ]);
+    }
 
     #[Route(name: 'new', methods: 'POST')]
     #[OA\Post(
@@ -44,7 +53,6 @@ class CompteRController extends AbstractController
                     new OA\Property(property: "quantitee", type: "string", example: "quantitée proposée"),
                     new OA\Property(property: "date", type: "string", format: "date-time", example: "date du compte-rendu"),
                     new OA\Property(property: "commentaire", type: "string", example: "commentaire"),
-
                 ]
             )
         ),
@@ -86,8 +94,6 @@ class CompteRController extends AbstractController
         return new JsonResponse($responseData, Response::HTTP_CREATED, ["Location"=> $location], true);
     }
 
-
-
     #[Route('/{id}', name: 'show', methods: 'GET')]
     #[OA\Get(
         path: "/api/compteR/{id}",
@@ -126,7 +132,6 @@ class CompteRController extends AbstractController
             )
         ]
     )]
-
     public function show(int $id): JsonResponse
     {
         $compteR = $this->repository->findOneBy(['id' => $id]);
@@ -137,7 +142,7 @@ class CompteRController extends AbstractController
             }
 
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);
-    }
+        }
 
 
 
@@ -161,13 +166,13 @@ class CompteRController extends AbstractController
                 type: "object",
                 properties: [
                     new OA\Property(property: "id", type: "integer", example: 1),
-                        new OA\Property(property: "nom", type: "string", example: "Nom de l'animal"),
-                        new OA\Property(property: "race", type: "string", example: "race de l'animal"),
-                        new OA\Property(property: "habitat", type: "string", example: "habitat de l'animal"),
-                        new OA\Property(property: "nourriture", type: "string", example: "nourriture proposée"),
-                        new OA\Property(property: "quantitee", type: "string", example: "quantitée proposée"),
-                        new OA\Property(property: "date", type: "string", format: "date-time", example: "date du compte-rendu"),
-                        new OA\Property(property: "commentaire", type: "string", example: "commentaire"),
+                    new OA\Property(property: "nom", type: "string", example: "Nom de l'animal"),
+                    new OA\Property(property: "race", type: "string", example: "race de l'animal"),
+                    new OA\Property(property: "habitat", type: "string", example: "habitat de l'animal"),
+                    new OA\Property(property: "nourriture", type: "string", example: "nourriture proposée"),
+                    new OA\Property(property: "quantitee", type: "string", example: "quantitée proposée"),
+                    new OA\Property(property: "date", type: "string", format: "date-time", example: "date du compte-rendu"),
+                    new OA\Property(property: "commentaire", type: "string", example: "commentaire"),
                 ]
             )
         ),
@@ -182,7 +187,6 @@ class CompteRController extends AbstractController
             )
         ]
     )]
-
     public function edit(int $id, Request $request): JsonResponse
     {
         $compteR = $this->repository->findOneBy(['id' => $id]);
@@ -201,12 +205,10 @@ class CompteRController extends AbstractController
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 
-
-
     #[Route('/{id}', name: 'delete', methods: 'DELETE')]
     #[OA\Delete(
         path: "/api/compteR/{id}",
-        summary: "Supprimer un compte-rendu par son ID",
+        summary: "Supprimer un compte-rendu par ID",
         parameters: [
             new OA\Parameter(
                 name: "id",
@@ -219,7 +221,7 @@ class CompteRController extends AbstractController
         responses: [
             new OA\Response(
                 response: 204,
-                description: "Compte-rendu supprimé avec succès",
+                description: "Compte-rendu supprimé avec succès"
             ),
             new OA\Response(
                 response: 404,
@@ -230,11 +232,10 @@ class CompteRController extends AbstractController
     public function delete(int $id): JsonResponse
     {
         $compteR = $this->repository->findOneBy(['id' => $id]);
-        if($compteR){
-        $this->manager->remove($compteR);
-        $this->manager->flush();
-
-        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+        if ($compteR) {
+            $this->manager->remove($compteR);
+            $this->manager->flush();
+            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
         }
         return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
