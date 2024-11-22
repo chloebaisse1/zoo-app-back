@@ -14,6 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('api/passage', name: 'app_api_passage_')]
 class PassageController extends AbstractController
@@ -27,6 +28,7 @@ class PassageController extends AbstractController
     }
 
     #[Route(name: 'new', methods: ['POST', 'OPTIONS'])]
+    #[IsGranted('ROLE_EMPLOYEE')] // Restreindre l'accès à la création d'un passage
     #[OA\Post(
         path: "/api/passage",
         summary: "Creation d'un passage employé(e)",
@@ -70,7 +72,6 @@ class PassageController extends AbstractController
     public function new(Request $request): JsonResponse
     {
         $passage = $this->serializer->deserialize($request->getContent(), Passage::class, 'json');
-
 
         $this->manager->persist($passage);
         $this->manager->flush();
@@ -136,6 +137,7 @@ class PassageController extends AbstractController
     }
 
     #[Route('/{id}', name: 'edit', methods: ['PUT', 'OPTIONS'])]
+    #[IsGranted('ROLE_EMPLOYEE')] // Restreindre l'accès à la modification d'un passage
     #[OA\Put(
         path: "/api/passage/{id}",
         summary: "Modifier un passage par ID",
@@ -189,6 +191,7 @@ class PassageController extends AbstractController
     }
 
     #[Route('/{id}', name: 'delete', methods: ['DELETE', 'OPTIONS'])]
+    #[IsGranted('ROLE_EMPLOYEE')] // Restreindre l'accès à la suppression d'un passage
     #[OA\Delete(
         path: "/api/passage/{id}",
         summary: "Supprimer un passage par ID",

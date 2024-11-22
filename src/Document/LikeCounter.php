@@ -4,10 +4,8 @@ namespace App\Document;
 
 use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 
-/**
- * @MongoDB\Document
- */
-#[MongoDB\Document]
+
+#[MongoDB\Document(collection: "LikeCounter")]  // Utilisation des attributs PHP 8
 class LikeCounter
 {
     #[MongoDB\Id]

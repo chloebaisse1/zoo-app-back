@@ -84,14 +84,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @return list<string>
      */
     public function getRoles(): array
-    {
-        $roles = $this->roles;
-        if(empty($roles)) {
-            $roles[] = 'ROLE_USER';
-        }
-        return array_unique($roles);
+{
+    $roles = $this->roles;
+    // Si aucun rôle n'est attribué, on définit le rôle par défaut
+    if (empty($roles)) {
+        $roles[] = 'ROLE_USER'; // Le rôle par défaut pour tous les utilisateurs
     }
-
+    return array_unique($roles);
+}
     /**
      * @param list<string> $roles
      */

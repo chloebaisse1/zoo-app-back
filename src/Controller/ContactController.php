@@ -10,10 +10,11 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\SerializerInterface;
-
 
 #[Route('api/contact', name: 'app_api_contact_')]
 class ContactController extends AbstractController
@@ -23,18 +24,27 @@ class ContactController extends AbstractController
         private ContactRepository $repository,
         private SerializerInterface $serializer,
         private UrlGeneratorInterface $urlGenerator,
-        )
-    {
+    ) {
     }
 
+    public function sendContactEmail(MailerInterface $mailer, string $senderEmail, string $message): void
+    {
+        $email = (new Email())
+            ->from($senderEmail)
+            ->to('arcadiazoo@email.com') // Destinataire fictif
+            ->subject('Nouvelle demande de contact')
+            ->text($message);
 
-    #[Route( methods: 'POST')]
+        $mailer->send($email);
+    }
+
+    #[Route('', name: 'new', methods: ['POST'])]
     #[OA\Post(
         path: "/api/contact",
-        summary: "Creation d'une demande de contact",
+        summary: "Création d'une demande de contact",
         requestBody: new OA\RequestBody(
             required: true,
-            description: "Données de la demande à creer",
+            description: "Données de la demande à créer",
             content: new OA\JsonContent(
                 type: "object",
                 properties: [
@@ -58,30 +68,30 @@ class ContactController extends AbstractController
                         new OA\Property(property: "createdAt", type: "string", format: "date-time"),
                     ]
                 )
-
             )
         ]
     )]
-    public function new(Request $request): JsonResponse
+    public function new(Request $request, MailerInterface $mailer): JsonResponse
     {
         $contact = $this->serializer->deserialize($request->getContent(), Contact::class, 'json');
 
         $this->manager->persist($contact);
         $this->manager->flush();
 
+        // Appel de la fonction d'envoi d'e-mail
+        $this->sendContactEmail($mailer, $contact->getEmail(), $contact->getDemande());
+
         $responseData = $this->serializer->serialize($contact, 'json');
         $location = $this->urlGenerator->generate(
-        'app_api_contact_show',
-        ['id' => $contact->getId()],
-        UrlGeneratorInterface::ABSOLUTE_URL
+            'app_api_contact_show',
+            ['id' => $contact->getId()],
+            UrlGeneratorInterface::ABSOLUTE_URL
         );
 
-        return new JsonResponse($responseData, Response::HTTP_CREATED, ["Location"=> $location], true);
+        return new JsonResponse($responseData, Response::HTTP_CREATED, ["Location" => $location], true);
     }
 
-
-
-    #[Route('/{id}', name: 'show', methods: 'GET')]
+    #[Route('/{id}', name: 'show', methods: ['GET'])]
     #[OA\Get(
         path: "/api/contact/{id}",
         summary: "Afficher une demande par son ID",
@@ -111,25 +121,22 @@ class ContactController extends AbstractController
             ),
             new OA\Response(
                 response: 404,
-                description: "Demande de contact non trouvé"
+                description: "Demande de contact non trouvée"
             )
         ]
     )]
     public function show(int $id): JsonResponse
     {
         $contact = $this->repository->findOneBy(['id' => $id]);
-            if($contact){
-                $responseData = $this->serializer->serialize($contact, 'json');
-
+        if ($contact) {
+            $responseData = $this->serializer->serialize($contact, 'json');
             return new JsonResponse($responseData, Response::HTTP_OK, [], true);
-            }
+        }
 
-            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 
-
-
-    #[Route('/{id}', name: 'delete', methods: 'DELETE')]
+    #[Route('/{id}', name: 'delete', methods: ['DELETE'])]
     #[OA\Delete(
         path: "/api/contact/{id}",
         summary: "Supprimer une demande de contact par son ID",
@@ -145,22 +152,22 @@ class ContactController extends AbstractController
         responses: [
             new OA\Response(
                 response: 204,
-                description: "Demande de contact supprimé avec succès",
+                description: "Demande de contact supprimée avec succès",
             ),
             new OA\Response(
                 response: 404,
-                description: "Demande de contact non trouvé"
+                description: "Demande de contact non trouvée"
             )
         ]
     )]
     public function delete(int $id): JsonResponse
     {
         $contact = $this->repository->findOneBy(['id' => $id]);
-        if($contact){
-        $this->manager->remove($contact);
-        $this->manager->flush();
+        if ($contact) {
+            $this->manager->remove($contact);
+            $this->manager->flush();
 
-        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
         }
         return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
